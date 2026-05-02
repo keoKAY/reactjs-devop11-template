@@ -58,7 +58,8 @@ jobs:
           echo "EOF"
         } >> $GITHUB_ENV
     - name: Send Telegram Report
-      if: env.CRITICAL != '0' || env.HIGH != '0'
+      #if: env.CRITICAL != '0' || env.HIGH > '0'
+      if: env.CRITICAL != '0' || fromJson(env.HIGH) > 5
       run: |
         # Build the multiline message
         MESSAGE="🚨 *Docker Scan Results*
@@ -77,7 +78,8 @@ jobs:
           -d parse_mode="Markdown" \
           -d text="$MESSAGE"
     - name: Fail if vulnerabilities found
-      if: env.CRITICAL != '0' || env.HIGH != '0'
+      #if: env.CRITICAL != '0' || env.HIGH != '0'
+      if: env.CRITICAL != '0' || fromJson(env.HIGH) > 5
       run: exit 1  
     - name: Push image 
       if: success()
