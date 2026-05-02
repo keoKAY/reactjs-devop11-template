@@ -18,12 +18,71 @@ jobs:
     - name: Login to Dockerhub 
       run: |
        echo "${{ secrets.PASSWORD }}" |  docker login -u ${{ secrets.USERNAME }} --password-stdin
-
+  
     - name: Build Docker images 
       run: docker build -t ${{ secrets.USERNAME}}/${{env.DH_IMAGE}}:${{env.TAG}} .
+    # Scan the docker image wiht Trivy 
+    - name: Install Trivy
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+        echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update
+        sudo apt-get install -y trivy
+    - name: Using Trivy for scanning docker images 
+      id: trivy
+      run: |
+        trivy image \
+          --format json \
+          --output trivy-report.json \
+          --severity CRITICAL,HIGH \
+          ${{ secrets.USERNAME }}/${{ env.DH_IMAGE }}:${{ env.TAG }} || true
+    - name: Parse vulnerabilities and Build Summary
+      run: |
+        # Count vulnerabilities
+        CRITICAL_COUNT=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length' trivy-report.json || echo 0)
+        HIGH_COUNT=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="HIGH")] | length' trivy-report.json || echo 0)
+        
+        # Extract top 5 Critical Vulnerabilities for the report
+        DETAIL_LIST=$(jq -r '.Results[].Vulnerabilities[]? | select(.Severity=="CRITICAL") | "• \(.VulnerabilityID) (\(.PkgName))" ' trivy-report.json | head -n 10)
+        
+        # Save to Environment
+        echo "CRITICAL=$CRITICAL_COUNT" >> $GITHUB_ENV
+        echo "HIGH=$HIGH_COUNT" >> $GITHUB_ENV
+        
+        # Use a multiline environment variable for the details
+        {
+          echo "VULN_DETAILS<<EOF"
+          echo "$DETAIL_LIST"
+          echo "EOF"
+        } >> $GITHUB_ENV
+    - name: Send Telegram Report
+      if: env.CRITICAL != '0' || env.HIGH != '0'
+      run: |
+        # Build the multiline message
+        MESSAGE="🚨 *Docker Scan Results*
+        
+        *Image:* \`${{ env.DH_NAME }}:${{ env.TAG }}\`
+        *Critical:* ${{ env.CRITICAL }}
+        *High:* ${{ env.HIGH }}
+        
+        *Top Critical Issues:*
+        ${{ env.VULN_DETAILS }}
+        
+        _Check GitHub Action logs for full report._"
 
+        curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d parse_mode="Markdown" \
+          -d text="$MESSAGE"
+    - name: Fail if vulnerabilities found
+      if: env.CRITICAL != '0' || env.HIGH != '0'
+      run: exit 1  
     - name: Push image 
+      if: success()
       run: docker push ${{ secrets.USERNAME}}/${{env.DH_IMAGE}}:${{env.TAG}}
     - name: Always logout 
       if: always()
       run: docker logout
+
