@@ -10,7 +10,7 @@ RUN npm run build
 
 
 # Stage:2 production 
-FROM nginx:latest
+FROM nginx:alpine
 #FROM nginx:1.19
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/build /usr/share/nginx/html
