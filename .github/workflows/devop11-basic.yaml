@@ -63,7 +63,7 @@ jobs:
         # Build the multiline message
         MESSAGE="🚨 *Docker Scan Results*
         
-        *Image:* \`${{ env.DH_NAME }}:${{ env.TAG }}\`
+        *Image:* \`${{secrets.USERNAME}}/${{ env.DH_IMAGE }}:${{ env.TAG }}\`
         *Critical:* ${{ env.CRITICAL }}
         *High:* ${{ env.HIGH }}
         
