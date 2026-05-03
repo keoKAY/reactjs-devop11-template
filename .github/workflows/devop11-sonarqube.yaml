@@ -40,7 +40,7 @@ jobs:
         
         *Project:* ${{ env.PROJECT_NAME }}
         *Status:* FAILED
-        *Link:* ${{ secrets.SONAR_HOST_URL }}/dashboard?id=${{ env.IMAGE_NAME }}"
+        *Link:* ${{ secrets.SONAR_HOST_URL }}/dashboard?id=${{ env.PROJECT_NAME }}"
         
         curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
           -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
