@@ -1,7 +1,7 @@
 # condition ( when to run this ? )
 on: 
   push: 
-    branches: ["master"]
+    branches: ["masterasdfasfa"]
 # tasks ( what are the task that we automate )
 env: 
   DH_IMAGE: devops11-basic-reactjs
@@ -58,7 +58,7 @@ jobs:
           echo "EOF"
         } >> $GITHUB_ENV
     - name: Send Telegram Report
-      #if: env.CRITICAL != '0' || env.HIGH > '0'
+      #if: env.CRITICAL != '0' || env.HIGH != '0'
       if: env.CRITICAL != '0' || fromJson(env.HIGH) > 5
       run: |
         # Build the multiline message

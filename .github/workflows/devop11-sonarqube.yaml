@@ -1,0 +1,48 @@
+# condition ( when to run this ? )
+on: 
+  push: 
+    branches: ["master"]
+
+# server-url 
+# password -> access token 
+env: 
+  PROJECT_NAME: devops11_sonarqube_demo
+jobs:
+ build-and-push: 
+  runs-on: ubuntu-latest
+  environment: DH_ENV  
+  steps: 
+    - name: Checkout 
+      uses: actions/checkout@v3
+    - name: Sonarqube Scan 
+      uses: sonarsource/sonarqube-scan-action@v3.0.0
+      env: 
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}  
+      with:
+        args: >
+          -Dsonar.projectKey=${{ env.PROJECT_NAME }}
+          -Dsonar.sources=. 
+          -Dsonar.working.directory=.scannerwork
+    - name: SonarQube Quality Gate Check
+      id: sonarqube-quality-gate-check
+      uses: sonarsource/sonarqube-quality-gate-action@master
+      with: 
+        scanMetadataReportFile: .scannerwork/report-task.txt
+      timeout-minutes: 5
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} 
+    - name: Send Telegram SonarQube Failure
+      if: failure() && steps.sonarqube-quality-gate-check.outcome == 'failure'
+      run: |
+        MESSAGE="❌ *SonarQube Quality Gate Failed*
+        
+        *Project:* ${{ env.PROJECT_NAME }}
+        *Status:* FAILED
+        *Link:* ${{ secrets.SONAR_HOST_URL }}/dashboard?id=${{ env.IMAGE_NAME }}"
+        
+        curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d parse_mode="Markdown" \
+          -d text="$MESSAGE"  
