@@ -25,6 +25,11 @@ function App() {
     localStorage.getItem("tokens") ? true : false
   )
   
+  
+  
+  const handleLoginCallBack = (value) => {
+    setIsValidated(value) // get value from navbar 
+  }
   return (
 
     // !isLoading && 
