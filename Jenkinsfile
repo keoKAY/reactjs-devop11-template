@@ -32,16 +32,16 @@ pipeline {
 }
             }
         }
-        // stage('Deploy container ') {
-        //     steps {
-        //         sh """ 
-        //         docker stop reactjs-cont || true 
-        //         docker rm reactjs-cont || true 
-                
-        //         docker run -dp 3000:80 --name reactjs-cont \
-        //             lyvanna544/${IMAGE_NAME}:v1.0.${TAG}
-        //         """
-        //     }
-        // }
+
+
+        stage('Deploy container ') {
+            steps {
+                dir('ansible'){
+                    sh """
+                    ansible-playbook -i inventory.ini playbooks/deploy-svc.yaml -e "image_name=${IMAGE_NAME}:v1.0.${TAG}"
+                    """
+                }
+            }
+        }
     }
 }

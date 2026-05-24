@@ -1,0 +1,14 @@
+- name: Deploy Reactjs Service
+  hosts: test-server 
+  tasks: 
+    - name: Starting demo service with docker compose module 
+      community.docker.docker_compose_v2: 
+        project_name: demo-app 
+        definition: 
+            version: '3.8'
+            services: 
+              reactjs-svc: 
+                #image: lyvanna544/jenkins-reactjs-img-ansible:v1.0.8
+                image: "lyvanna544/{{image_name}}"
+                ports: 
+                  - "3003:80"
