@@ -17,19 +17,13 @@ pipeline {
             steps{
                 
                 dir('ansible'){
-                    step{
-                        sh """
-                            ls -lrt 
-                         """
-                    }
+                  sh """
+                    ls -lrt 
+                    """
+                   
                 }
             }
         }
-
-
-     
-    
-       
         
     }
 }
