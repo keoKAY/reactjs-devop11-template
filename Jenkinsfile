@@ -14,32 +14,8 @@ stages {
     stage('Building Image') {
         steps {
             sh """
-                docker build -t ${IMAGE_NAME} .
+                docker build -t ${IMAGE_NAME}:v1.0.${TAG} .
             """
-        }
-    }
-
-    stage('Push Image to DockerHub') {
-        steps {
-            withCredentials([
-                usernamePassword(
-                    credentialsId: 'DOCKERHUB-CRED',
-                    usernameVariable: 'USERNAME',
-                    passwordVariable: 'TOKEN'
-                )
-            ]) {
-
-                sh """
-                    echo "1. Login to DockerHub"
-                    echo "\$TOKEN" | docker login -u \$USERNAME --password-stdin
-
-                    echo "2. Tag Image"
-                    docker tag ${IMAGE_NAME} \$USERNAME/${IMAGE_NAME}:v1.0.${TAG}
-
-                    echo "3. Push Image"
-                    docker push \$USERNAME/${IMAGE_NAME}:v1.0.${TAG}
-                """
-            }
         }
     }
 
