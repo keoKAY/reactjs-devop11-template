@@ -2,11 +2,11 @@
 # set condition for when to run the action files 
 on: 
   push: 
-    branches: ["mastdder"]
+    branches: ["master"]
 # build docker image , push dockerhub
 env: 
-  DOCKER_IMAGE_NAME: k8s-reactjs-itp-gen1
-  HELM_REPO: keoKAY/gitops_repo_itp_gen1
+  DOCKER_IMAGE_NAME: k8s-reactjs-devops11
+  HELM_REPO: keoKAY/argocd-devops11-demo
 jobs: 
   ci-job: 
     runs-on: ubuntu-latest 
@@ -39,6 +39,7 @@ jobs:
     runs-on: ubuntu-latest 
     environment: DOCKER_ENV
     steps: 
+    # yq might already included in your runner
       - name: Install yq command 
         run: |
           wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
@@ -53,17 +54,17 @@ jobs:
           git clone https://github.com/${{ env.HELM_REPO }} helm_repo 
       - name: Update Helm Chart 
         run: |
-          cd helm_repo/reactjs-helm
+          cd helm_repo/nginx-chart
 
           echo "Update repository username/imagename "
 
-          yq -i ".image.repository=\"${{ secrets.USERNAME }}/${{ env.DOCKER_IMAGE_NAME}}\"" values.yaml
+          yq -i ".image.repository=\"${{ secrets.USERNAME }}/${{ env.DOCKER_IMAGE_NAME}}\"" prod-values.yaml
 
           echo "Update image tag "
-          yq -i ".image.tag=\"${{ env.TAG }}\"" values.yaml
+          yq -i ".image.tag=\"${{ env.TAG }}\"" prod-values.yaml
 
-          git config --global user.email "username@example.com"
-          git config --global user.name "dummyname"
+          git config --global user.email "devop11@example.com"
+          git config --global user.name "devop11-user"
           git add . 
           git commit -m "Update helm to use image : ${{ env.TAG }}"
           
